@@ -3,12 +3,19 @@ package com.epam.training.webdriver;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EmailPage extends Driver {
 
-    public EmailPage() {
+    private static final Logger logger = Logger.getLogger(EmailPage.class.getName());
+    public WebDriver driver;
+
+    public EmailPage(WebDriver driver) {
+        this.driver = driver;
         PageFactory.initElements(driver, this);
     }
 
@@ -28,28 +35,53 @@ public class EmailPage extends Driver {
     private WebElement senderText;
 
     public String validateLogin() {
-      return driver.getTitle();
+        String title = driver.getTitle();
+        logger.info("Validating login. Page title: " + title);
+        return title;
     }
 
     public void openComposeFolder() {
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-                .ignoring(StaleElementReferenceException.class)
-                .until((WebDriver d) -> {
-                    composeLink.click();
-                    return true;
-                });
+        try {
+            logger.info("Opening compose folder...");
+            new WebDriverWait(driver, Duration.ofSeconds(10))
+                    .ignoring(StaleElementReferenceException.class)
+                    .until(ExpectedConditions.elementToBeClickable(composeLink))
+                    .click();
+            logger.info("Compose folder opened successfully.");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to open compose folder.", e);
+            throw e;
+        }
     }
 
-    public void fillReceiver() {
-        addressee.sendKeys("dinadinski@gmail.com");
+    public void fillReceiver(String email) {
+        try {
+            logger.info("Filling receiver: " + email);
+            addressee.sendKeys(email);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to fill receiver field.", e);
+            throw e;
+        }
     }
 
-    public void fillSubject() {
-        subjectField.sendKeys("Test");
+    public void fillSubject(String subjectText) {
+        try {
+            logger.info("Filling subject: " + subjectText);
+            subjectField.sendKeys(subjectText);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to fill subject field.", e);
+            throw e;
+        }
     }
 
-    public void fillEmailText(){
-        emailText.sendKeys("Compose new email test successfully! Congrats!!!");
+    public void fillEmailText(String bodyText) {
+        try {
+            logger.info("Filling email text.");
+            emailText.sendKeys(bodyText);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to fill email text field.", e);
+            throw e;
+        }
     }
 
     @FindBy(xpath = "//*[@id=\"app\"]/div[2]/div/div[1]/nav/div/div[3]/div[1]/ul/li[4]/div/a/span[1]")
@@ -67,13 +99,18 @@ public class EmailPage extends Driver {
 
     @FindBy(xpath = "//*[@id=\"editor-container\"]/div[1]/div")
     private WebElement getEmailText;
+
     public void openDraftsFolder() {
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-                .ignoring(StaleElementReferenceException.class)
-                .until((WebDriver d) -> {
-                    draftsFoder.click();
-                    return true;
-                });
+        try {
+            logger.info("Opening drafts folder...");
+            new WebDriverWait(driver, Duration.ofSeconds(10))
+                    .ignoring(StaleElementReferenceException.class)
+                    .until(ExpectedConditions.elementToBeClickable(draftsFoder))
+                    .click();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to open drafts folder.", e);
+            throw e;
+        }
     }
 
     @FindBy(xpath = "//div[@data-test-id='snippet']//div[@role='gridcell']")
@@ -88,8 +125,16 @@ public class EmailPage extends Driver {
     }
 
     public void openDraftEmail() {
-        openDraftEmail.click();
+        try {
+            logger.info("Opening draft email...");
+            openDraftEmail.click();
+            logger.info("Draft email opened successfully.");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to open draft email.", e);
+            throw e;
+        }
     }
+
     public String validateSubject() {
         return subject.getText();
     }
@@ -100,19 +145,31 @@ public class EmailPage extends Driver {
     private WebElement sendButton;
 
     public void sendEmail() {
-        sendButton.click();
+        try {
+            logger.info("Sending email...");
+            sendButton.click();
+            logger.info("Email sent successfully.");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to send email.", e);
+            throw e;
+        }
     }
 
     @FindBy(xpath = "//*[@id=\"app\"]/div[2]/div/div[1]/nav/div/div[3]/div[1]/ul/li[5]/div/a/span")
     private WebElement openSentFolder;
 
     public void openSentFolder() {
-        new WebDriverWait(driver, Duration.ofSeconds(10))
-                .ignoring(StaleElementReferenceException.class)
-                .until((WebDriver d) -> {
-                    openSentFolder.click();
-                    return true;
-                });
+        try {
+            logger.info("Opening sent folder...");
+            new WebDriverWait(driver, Duration.ofSeconds(10))
+                    .ignoring(StaleElementReferenceException.class)
+                    .until(ExpectedConditions.elementToBeClickable(openSentFolder))
+                    .click();
+            logger.info("Sent folder opened successfully.");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to open sent folder.", e);
+            throw e;
+        }
     }
 
     @FindBy(xpath =
@@ -129,8 +186,15 @@ public class EmailPage extends Driver {
     @FindBy(xpath = "//*[@id=\"profile-signout-link\"]/span[2]")
     private WebElement signOutButton;
 
-    public void logOut(){
-        userIcon.click();
-        signOutButton.click();
+    public void logOut() {
+        try {
+            logger.info("Logging out...");
+            userIcon.click();
+            signOutButton.click();
+            logger.info("Logged out successfully.");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to log out.", e);
+            throw e;
+        }
     }
 }

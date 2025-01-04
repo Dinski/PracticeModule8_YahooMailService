@@ -3,51 +3,76 @@ package com.epam.training.webdriver.test;
 import com.epam.training.webdriver.Driver;
 import com.epam.training.webdriver.EmailPage;
 import com.epam.training.webdriver.LoginPage;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
+import org.testng.annotations.*;
 import static org.testng.Assert.assertEquals;
+import java.util.logging.Level;
 
+/**
+ * Test class for verifying the fields of a draft email in the email application.
+ */
 public class TestCaseDraftEmail extends Driver {
-    LoginPage loginPage;
-    EmailPage emailPage;
-
-    public TestCaseDraftEmail() {super();
-    }
+    public LoginPage loginPage;
+    public EmailPage emailPage;
 
     @BeforeClass
-    public void setUp(){
-        getDriver();
-
-        loginPage = new LoginPage();
-        emailPage = new EmailPage();
+    public void initializePages() {
+        loginPage = new LoginPage(driver);
+        emailPage = new EmailPage(driver);
     }
 
+
+    /**
+     * Test case to verify the fields (receiver, subject, and body) of a draft email.
+     *
+     * @param user The username for logging into the email account.
+     * @param pwd  The password for the email account.
+     * @param to   The recipient's email address.
+     * @param sub  The subject of the draft email.
+     * @param body The body content of the draft email.
+     */
     @Test(testName = "TC-3 Verify email fields", dataProvider = "emailFields", dataProviderClass = TestDataProvider.class,
-    priority = 3)
+            priority = 3)
     public void verifyEmailFields(String user, String pwd, String to, String sub, String body) {
-        System.out.println("This is the test code " + new Object(){}.getClass().getEnclosingMethod().getName());
-        loginPage.login(user, pwd);
-        Object[] windowHandles=driver.getWindowHandles().toArray();
-        driver.switchTo().window((String) windowHandles[1]);
-        emailPage.openDraftsFolder();
-        emailPage.openDraftEmail();
+        try {
+            logger.info("Starting the verification of email fields.");
 
-        String receiver = emailPage.validateReceiver();
-        assertEquals(to, receiver);
+            // Step 1: Login with valid credentials
+            loginPage.login(user, pwd);
+            logger.info("Login successful");
 
-        String subject = emailPage.validateSubject();
-        assertEquals(sub, subject);
+            // Switch to the new window that opens after login
+            String originalWindow = driver.getWindowHandle();
+            switchToNewWindow(originalWindow);
 
-        String text = emailPage.validateText();
-        assertEquals(body, text);
-        System.out.println("Test End " + new Object(){}.getClass().getEnclosingMethod().getName());
-    }
+            // Step 3: Open the Drafts folder
+            emailPage.openDraftsFolder();
+            logger.info("Drafts folder opened.");
 
-    @AfterClass
-    public void close() {
-        driver.quit();
+            // Step 4: Open the draft email
+            emailPage.openDraftEmail();
+            logger.info("Draft email opened.");
+
+            // Step 5: Verify the receiver field
+            String receiver = emailPage.validateReceiver();
+            logger.info("Verified receiver: " + receiver);
+            assertEquals(receiver, to, "Receiver does not match the expected value.");
+
+            // Step 6: Verify the subject field
+            String subject = emailPage.validateSubject();
+            logger.info("Verified subject: " + subject);
+            assertEquals(subject, sub, "Subject does not match the expected value.");
+
+            // Step 7: Verify the email body
+            String text = emailPage.validateText();
+            logger.info("Verified email body: " + text);
+            assertEquals(text, body, "Email body does not match the expected value.");
+
+            driver.close();
+
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error during email fields verification.", e);
+            throw e; // Rethrow the exception after logging
+        }
     }
 }
 
