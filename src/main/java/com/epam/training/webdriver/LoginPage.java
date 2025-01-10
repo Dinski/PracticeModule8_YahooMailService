@@ -4,13 +4,15 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class LoginPage extends Driver {
 
-    private WebDriver driver;
+    private final WebDriver driver;
     private final Logger logger = Logger.getLogger(Driver.class.getName());
 
     @FindBy(id = "login-username")
@@ -37,11 +39,15 @@ public class LoginPage extends Driver {
     public void login(String user, String pwd) {
         try {
             logger.info("Performing login...");
-            userName.sendKeys(user);
+           waitForElementToBeVisible(userName);
+           userName.sendKeys(user);
             logger.info("Username entered.");
-            nextButton.click();
+           waitForElementToBeClickable(nextButton);
+           nextButton.click();
+           waitForElementToBeVisible(password);
             password.sendKeys(pwd);
             logger.info("Password entered.");
+            waitForElementToBeClickable(nextButton);
             nextButton.click();
             logger.info("Navigating to mailbox.");
             mailIcon.click();

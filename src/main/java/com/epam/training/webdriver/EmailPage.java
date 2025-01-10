@@ -40,18 +40,17 @@ public class EmailPage extends Driver {
         return title;
     }
 
-    public void openComposeFolder() {
+    public WebElement openComposeFolder() {
         try {
             logger.info("Opening compose folder...");
-            new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .ignoring(StaleElementReferenceException.class)
-                    .until(ExpectedConditions.elementToBeClickable(composeLink))
-                    .click();
+            waitForElementToBeClickable(composeLink);
+            composeLink.click();
             logger.info("Compose folder opened successfully.");
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to open compose folder.", e);
             throw e;
         }
+    return composeLink;
     }
 
     public void fillReceiver(String email) {
@@ -103,10 +102,8 @@ public class EmailPage extends Driver {
     public void openDraftsFolder() {
         try {
             logger.info("Opening drafts folder...");
-            new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .ignoring(StaleElementReferenceException.class)
-                    .until(ExpectedConditions.elementToBeClickable(draftsFoder))
-                    .click();
+            waitForElementToBeClickable(draftsFoder);
+            draftsFoder.click();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to open drafts folder.", e);
             throw e;
@@ -147,6 +144,7 @@ public class EmailPage extends Driver {
     public void sendEmail() {
         try {
             logger.info("Sending email...");
+            waitForElementToBeClickable(sendButton);
             sendButton.click();
             logger.info("Email sent successfully.");
         } catch (Exception e) {
@@ -161,13 +159,13 @@ public class EmailPage extends Driver {
     public void openSentFolder() {
         try {
             logger.info("Opening sent folder...");
-            new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .ignoring(StaleElementReferenceException.class)
-                    .until(ExpectedConditions.elementToBeClickable(openSentFolder))
-                    .click();
+
+            waitForElementToBeClickable(openSentFolder);
+            openSentFolder.click();
+
             logger.info("Sent folder opened successfully.");
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to open sent folder.", e);
+            logger.log(Level.WARNING, "Failed to open sent folder.", e);
             throw e;
         }
     }
@@ -189,11 +187,13 @@ public class EmailPage extends Driver {
     public void logOut() {
         try {
             logger.info("Logging out...");
+            waitForElementToBeVisible(userIcon);
             userIcon.click();
+            waitForElementToBeClickable(signOutButton);
             signOutButton.click();
             logger.info("Logged out successfully.");
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to log out.", e);
+            logger.log(Level.WARNING, "Failed to log out.", e);
             throw e;
         }
     }

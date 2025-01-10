@@ -5,6 +5,7 @@ import com.epam.training.webdriver.EmailPage;
 import com.epam.training.webdriver.LoginPage;
 import org.testng.annotations.*;
 
+import static com.epam.training.webdriver.test.TestDataProvider.maskSensitiveValue;
 import static org.testng.Assert.assertEquals;
 import java.util.logging.Level;
 
@@ -25,19 +26,22 @@ public class TestCaseSendEmail extends Driver {
     /**
      * Test case for sending an email and verifying its presence in the Sent folder.
      *
-     * @param user The username for logging into the email account.
-     * @param pwd  The password for the email account.
+     * @param usernameKey The username for logging into the email account.
+     * @param passwordKey  The password for the email account.
      * @param body The body content of the email to be sent.
      */
     @Test(testName = "TC-4 Send the mail", dataProvider = "emailFields1", dataProviderClass = TestDataProvider.class,
             priority = 4)
-    public void sendEmail(String user, String pwd, String body) {
+    public void sendEmail(String usernameKey, String passwordKey, String body) {
         try {
             logger.info("Starting the process to send an email.");
 
+            String  username = Driver.getDecryptedValue(usernameKey);
+            String password = Driver.getDecryptedValue(passwordKey);
             // Step 1: Login to the application
-            loginPage.login(user, pwd);
-            logger.info("Login successful for user: " + user);
+            loginPage.login(username, password);
+            logger.info("Login successful for username: " + maskSensitiveValue(username) +
+                    " with password: " + maskSensitiveValue(password));
 
             // Step 2: Switch to the new window that opens after login
             String originalWindow = driver.getWindowHandle();

@@ -1,9 +1,14 @@
 package com.epam.training.webdriver;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.*;
 
+import java.io.FileInputStream;
 import java.time.Duration;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,7 +17,26 @@ public class Driver {
 
     protected WebDriver driver;
     public Logger logger = Logger.getLogger(Driver.class.getName());
+    public WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
 
+    private static final Properties properties = new Properties();
+
+    static {
+        try (FileInputStream fis = new FileInputStream("src/main/resources/config.properties")) {
+            properties.load(fis);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load configuration properties.", e);
+        }
+    }
+
+    public static String getDecryptedValue(String key) {
+        try {
+            String encryptedValue = properties.getProperty(key);
+            return EncryptionUtil.decrypt(encryptedValue);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decrypt property: " + key, e);
+        }
+    }
     @BeforeClass
     public  void setUp() {
         try {
@@ -41,6 +65,15 @@ public class Driver {
 
     public WebDriver getDriver() {
         return driver;
+    }
+
+
+    public WebElement waitForElementToBeVisible(WebElement element) {
+        return wait.until(ExpectedConditions.visibilityOf(element));
+    }
+
+    public void waitForElementToBeClickable(WebElement element) {
+        wait.until(ExpectedConditions.elementToBeClickable(element));
     }
 
     public void switchToNewWindow(String originalWindow) {

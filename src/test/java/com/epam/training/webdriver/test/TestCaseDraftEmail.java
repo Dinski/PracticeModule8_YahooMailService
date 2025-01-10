@@ -24,20 +24,23 @@ public class TestCaseDraftEmail extends Driver {
     /**
      * Test case to verify the fields (receiver, subject, and body) of a draft email.
      *
-     * @param user The username for logging into the email account.
-     * @param pwd  The password for the email account.
+     * @param usernameKey The username for logging into the email account.
+     * @param passwordKey  The password for the email account.
      * @param to   The recipient's email address.
      * @param sub  The subject of the draft email.
      * @param body The body content of the draft email.
      */
     @Test(testName = "TC-3 Verify email fields", dataProvider = "emailFields", dataProviderClass = TestDataProvider.class,
             priority = 3)
-    public void verifyEmailFields(String user, String pwd, String to, String sub, String body) {
+    public void verifyEmailFields(String usernameKey, String passwordKey, String to, String sub, String body) {
         try {
+            String username = Driver.getDecryptedValue(usernameKey);
+            String password = Driver.getDecryptedValue(passwordKey);
+
             logger.info("Starting the verification of email fields.");
 
             // Step 1: Login with valid credentials
-            loginPage.login(user, pwd);
+            loginPage.login(username, password);
             logger.info("Login successful");
 
             // Switch to the new window that opens after login
