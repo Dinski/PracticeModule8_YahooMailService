@@ -1,10 +1,16 @@
 package com.epam.training.webdriver.test;
 
+import com.epam.training.webdriver.Driver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import util.EncryptionUtil;
+import util.PropertiesUtil;
+import com.epam.training.webdriver.model.Email;
+import com.epam.training.webdriver.model.User;
 import org.testng.annotations.DataProvider;
-import java.util.logging.Logger;
 
 public class TestDataProvider {
-    private static final Logger logger = Logger.getLogger(TestDataProvider.class.getName());
+    public static Logger logger = LogManager.getLogger(Driver.class.getName());
 
     // Helper method to mask sensitive information for logs
     static String maskSensitiveValue(String value) {
@@ -14,76 +20,55 @@ public class TestDataProvider {
         return value.replaceAll(".", "*");
     }
 
-    private static String getEnv(String key, String defaultValue) {
-        String value = System.getenv(key);
-        return (value != null && !value.isBlank()) ? value : defaultValue;
-    }
-@DataProvider(name = "validUserCredentials")
-public static Object[][] testData() {
-    String username = System.getenv("encrypted.username");
-    String password = System.getenv("encrypted.password");
+    @DataProvider(name = "userCredentials")
+    public static Object[][] userCredentials() throws Exception {
+        String encryptedUsername = PropertiesUtil.getProperty("encrypted.username");
+        String encryptedPassword = PropertiesUtil.getProperty("encrypted.password");
 
-    if (username == null || password == null) {
-        logger.severe("Environment variables for email fields are not set.");
-        throw new IllegalStateException("Missing required environment variables for email fields.");
-    }
-
-    logger.info("Providing email fields for test with masked sender email: " + maskSensitiveValue(username));
-    logger.info("Providing password for test with masked password: " + maskSensitiveValue(password));
-    return new Object[][]{
-            {
-                    getEnv(username, "encrypted.username"),
-                    getEnv(password, "encrypted.password")
-            }
-    };
-}
-
-
-    @DataProvider(name = "emailFields1")
-    public static Object[][] emailFields1() {
-        String username = System.getenv("encrypted.username");
-        String password = System.getenv("encrypted.password");
-        String emailBody = System.getenv("EMAIL_BODY");
-
-        if (username == null || emailBody == null || password == null) {
-            logger.severe("Environment variables for email fields are not set.");
-            throw new IllegalStateException("Missing required environment variables for email fields.");
+        if (encryptedUsername == null || encryptedPassword == null )
+        {
+            logger.warn("Properties for email fields are not set.");
+            throw new IllegalStateException("Missing required properties for email fields.");
         }
 
+        String username = EncryptionUtil.decrypt(encryptedUsername);
+        String password = EncryptionUtil.decrypt(encryptedPassword);
+
         logger.info("Providing email fields for test with masked sender email: " + maskSensitiveValue(username));
-        logger.info("Providing password for test with masked password: " + maskSensitiveValue(password));
+        logger.info("Providing email fields for test with masked sender email: " + maskSensitiveValue(password));
+
         return new Object[][]{
-                {
-                        (getEnv(username, "encrypted.username")),
-                        (getEnv(password, "encrypted.password")),
-                        (getEnv(emailBody, "Test email body"))
-                }
+                {new User(username, password)}
         };
     }
 
     @DataProvider(name = "emailFields")
-    public static Object[][] emailFields() {
-        String email = System.getenv("encrypted.username");
-        String password = System.getenv("encrypted.password");
-        String to = System.getenv("TO_EMAIL");
-        String subject = System.getenv("EMAIL_SUBJECT");
-        String emailBody = System.getenv("EMAIL_BODY");
-//
-        if (email == null || password == null || to == null || subject == null || emailBody == null) {
-            logger.severe("Environment variables for email fields are not set.");
-            throw new IllegalStateException("Missing required environment variables for email fields.");
+    public static Object[][] emailFields() throws Exception {
+
+        String encryptedSender = PropertiesUtil.getProperty("encrypted.username");
+        String encryptedPassword = PropertiesUtil.getProperty("encrypted.password");
+        String encryptedTo = PropertiesUtil.getProperty("TO_EMAIL");
+        String encryptedSubject = PropertiesUtil.getProperty("EMAIL_SUBJECT");
+        String encryptedBody = PropertiesUtil.getProperty("EMAIL_BODY");
+
+        if (encryptedSender == null || encryptedPassword == null || encryptedTo == null ||
+                encryptedSubject == null || encryptedBody == null) {
+            logger.warn("Properties for email fields are not set.");
+            throw new IllegalStateException("Missing required properties for email fields.");
         }
-        logger.info("Providing email fields for test with masked sender email: " + maskSensitiveValue(email));
+
+       // Decrypt sensitive information using EncryptionUtil
+        String username = EncryptionUtil.decrypt(encryptedSender);
+        String password = EncryptionUtil.decrypt(encryptedPassword);
+        String receiver = EncryptionUtil.decrypt(encryptedTo);
+        String subject = EncryptionUtil.decrypt(encryptedSubject);
+        String content = EncryptionUtil.decrypt(encryptedBody);
+
+        logger.info("Providing email fields for test with masked sender email: " + maskSensitiveValue(receiver));
 
         return new Object[][]{
-                {
-                        (getEnv(email, "encrypted.username")),
-                        (getEnv(password, "encrypted.password")),
-                        (getEnv(to, "dinadinski@gmail.com")),
-                        (getEnv(subject, "Test email")),
-                        (getEnv(emailBody, "Test email body"))
-                }
-                };
+                {new User(username, password),
+                new Email(username,receiver,subject,content)}
+        };
     }
 }
-

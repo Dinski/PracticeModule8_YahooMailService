@@ -1,53 +1,63 @@
 package com.epam.training.webdriver;
+
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.*;
+import util.PropertiesUtil;
 
-import java.io.FileInputStream;
 import java.time.Duration;
 import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Driver {
 
     protected WebDriver driver;
-    public Logger logger = Logger.getLogger(Driver.class.getName());
-    public WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
 
-    private static final Properties properties = new Properties();
+    private static final ThreadLocal<WebDriver> threadLocal = new ThreadLocal<>();
+    private static Properties properties = new Properties();
 
-    static {
-        try (FileInputStream fis = new FileInputStream("src/main/resources/config.properties")) {
-            properties.load(fis);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to load configuration properties.", e);
-        }
-    }
+    public Logger logger = LogManager.getLogger(Driver.class.getName());
 
-    public static String getDecryptedValue(String key) {
-        try {
-            String encryptedValue = properties.getProperty(key);
-            return EncryptionUtil.decrypt(encryptedValue);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to decrypt property: " + key, e);
-        }
-    }
     @BeforeClass
-    public  void setUp() {
+    public void setUp() {
+        String browser = PropertiesUtil.getProperty("browser");
+        int implicitWait = Integer.parseInt(PropertiesUtil.getProperty("implicit.wait"));
+        String baseUrl = PropertiesUtil.getProperty("base.url");
+
         try {
-            driver = new ChromeDriver();
+            switch (browser.toLowerCase()) {
+                case "chrome" -> {
+                    WebDriverManager.chromedriver().setup();
+                    driver = new ChromeDriver();
+                }
+                case "edge" -> {
+                    WebDriverManager.edgedriver().setup();
+                    driver = new EdgeDriver();
+                }
+                case "firefox" -> {
+                    WebDriverManager.firefoxdriver().setup();
+                    driver = new FirefoxDriver();
+                }
+                default -> throw new IllegalAccessException("Unsupported browser: " + browser);
+            }
             driver.manage().window().maximize();
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
-            driver.get("https://login.yahoo.com");
-            logger.info("WebDriver initialized and navigated to Yahoo login.");
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
+            driver.get(baseUrl);
+            logger.info("WebDriver initialized for " + browser + " and navigated to: " + baseUrl);
+
+            threadLocal.set(driver);
         } catch  (Exception e) {
-            logger.log(Level.SEVERE, "Error during WebDriver initialization", e);
-            throw e;
+            logger.error("Error during WebDriver initialization");
+            try {
+                throw e;
+            } catch (IllegalAccessException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -59,36 +69,39 @@ public class Driver {
                 logger.info("WebDriver closed successfully.");
             }
         } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error during WebDriver initialization", e);
+            logger.error("Error during WebDriver initialization", e);
         }
     }
 
-    public WebDriver getDriver() {
-        return driver;
+    /**
+     * Provides the WebDriver instance.
+     * @return The WebDriver instance.
+     */
+    public static WebDriver getDriver() {
+        return threadLocal.get();
     }
 
-
-    public WebElement waitForElementToBeVisible(WebElement element) {
-        return wait.until(ExpectedConditions.visibilityOf(element));
-    }
-
-    public void waitForElementToBeClickable(WebElement element) {
-        wait.until(ExpectedConditions.elementToBeClickable(element));
-    }
-
-    public void switchToNewWindow(String originalWindow) {
-        try {
-            Set<String> allWindows = driver.getWindowHandles();
-            for (String window : allWindows) {
-                if (!window.equals(originalWindow)) {
-                    driver.switchTo().window(window);
-                    logger.info("Switched to a new window: " + driver.getTitle());
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        throw new RuntimeException("No new window found to switch to.");
-    }
+//    public WebElement waitForElementToBeVisible(WebElement element) {
+//        return wait.until(ExpectedConditions.visibilityOf(element));
+//    }
+//
+//    public void waitForElementToBeClickable(WebElement element) {
+//        wait.until(ExpectedConditions.elementToBeClickable(element));
+//    }
+//
+//    public void switchToNewWindow(String originalWindow) {
+//        try {
+//            Set<String> allWindows = driver.getWindowHandles();
+//            for (String window : allWindows) {
+//                if (!window.equals(originalWindow)) {
+//                    driver.switchTo().window(window);
+//                    logger.info("Switched to a new window: " + driver.getTitle());
+//                    return;
+//                }
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//        throw new RuntimeException("No new window found to switch to.");
+//    }
 }

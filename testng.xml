@@ -14,10 +14,6 @@
                 </methods>
             </class>
             <class name="com.epam.training.webdriver.test.TestCaseLogin">
-                <parameter name="username" value="************"/>
-                <parameter name="password" value="************">
-
-                </parameter>
                 <methods>
                     <include name="successfulLogin"/>
                 </methods>

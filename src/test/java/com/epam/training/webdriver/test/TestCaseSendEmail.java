@@ -1,20 +1,22 @@
 package com.epam.training.webdriver.test;
 
-import com.epam.training.webdriver.Driver;
-import com.epam.training.webdriver.EmailPage;
-import com.epam.training.webdriver.LoginPage;
+import com.epam.training.webdriver.*;
+import com.epam.training.webdriver.model.Email;
+import com.epam.training.webdriver.model.User;
 import org.testng.annotations.*;
+import util.TestListener;
 
 import static com.epam.training.webdriver.test.TestDataProvider.maskSensitiveValue;
 import static org.testng.Assert.assertEquals;
-import java.util.logging.Level;
 
 /**
  * Test class for sending an email and verifying its presence in the Sent folder.
  */
+@Listeners(TestListener.class)
 public class TestCaseSendEmail extends Driver {
     public LoginPage loginPage;
     public EmailPage emailPage;
+
 
     @BeforeMethod
     public void initializePages() {
@@ -24,28 +26,26 @@ public class TestCaseSendEmail extends Driver {
     }
 
     /**
-     * Test case for sending an email and verifying its presence in the Sent folder.
+     * Test case to verify the fields (receiver, subject, and body) of a draft email.
      *
-     * @param usernameKey The username for logging into the email account.
-     * @param passwordKey  The password for the email account.
-     * @param body The body content of the email to be sent.
+     * @param userCredentials The username and password for logging into the email account.
+     * @param email The email sender, receiver, subject and content.
+     *
      */
-    @Test(testName = "TC-4 Send the mail", dataProvider = "emailFields1", dataProviderClass = TestDataProvider.class,
+    @Test(testName = "TC-4 Send the mail", dataProvider = "emailFields", dataProviderClass = TestDataProvider.class,
             priority = 4)
-    public void sendEmail(String usernameKey, String passwordKey, String body) {
+    public void sendEmail(User userCredentials, Email email) {
         try {
             logger.info("Starting the process to send an email.");
 
-            String  username = Driver.getDecryptedValue(usernameKey);
-            String password = Driver.getDecryptedValue(passwordKey);
             // Step 1: Login to the application
-            loginPage.login(username, password);
-            logger.info("Login successful for username: " + maskSensitiveValue(username) +
-                    " with password: " + maskSensitiveValue(password));
+            loginPage.login(userCredentials);
+            logger.info("Login successful for username: " + maskSensitiveValue(userCredentials.getUsername()) +
+                    " with password: " + maskSensitiveValue(userCredentials.getPassword()));
 
             // Step 2: Switch to the new window that opens after login
             String originalWindow = driver.getWindowHandle();
-            switchToNewWindow(originalWindow);
+            loginPage.switchToNewWindow(originalWindow);
 
             // Step 3: Open the Drafts folder
             emailPage.openDraftsFolder();
@@ -64,26 +64,24 @@ public class TestCaseSendEmail extends Driver {
             logger.info("Sent folder opened.");
 
             // Step 7: Switch back to the original window
-            switchToNewWindow(originalWindow);
+            loginPage.switchToNewWindow(originalWindow);
 
             // Step 8: Verify if the email appears in the Sent folder
             String emailIsInSentFolder = emailPage.verifyEmailIsInSentFolder();
             logger.info("Email in sent folder: " + emailIsInSentFolder);
 
-            // Assert that the body of the sent email matches the provided body
-            assertEquals(emailIsInSentFolder, body,
+            // Assert that the content of the sent email matches the provided content
+            assertEquals(emailIsInSentFolder, email.getContent(),
                     "The email body does not match the expected content in the sent folder.");
+            logger.info("Actual email content: " + emailIsInSentFolder + " matches the expected email content: "
+                    + email.getContent() + " in Sent folder");
 
             // Step 9: Log out from the email application
             emailPage.logOut();
             logger.info("Logged out from the email application.");
 
-            // Step 10: Clean up - close the current window
-            driver.close();
-            logger.info("Current window closed.");
-
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error during email sending process.", e);
+            logger.error("Error during email sending process.", e);
             throw e; // Rethrow the exception after logging
         }
     }
